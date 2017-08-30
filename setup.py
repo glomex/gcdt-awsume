@@ -44,10 +44,10 @@ setup(
     author_email='mark.fink@glomex.com',
     entry_points={
         'console_scripts': [
-            'logon=gcdt_awsume.awsume_main:main'
+            'awsume=gcdt_awsume.awsume_main:main'
         ],
         'gcdt10': [
-            'logon=gcdt_awsume.plugin',
+            'awsume=gcdt_awsume.plugin',
         ],
     }
 )

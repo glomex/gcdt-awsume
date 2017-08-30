@@ -10,17 +10,40 @@ import botocore.session
 import configparser
 from backports.configparser import NoOptionError
 
-from gcdt_awsume.utils import datetime_to_timestamp
+from .utils import datetime_to_timestamp, get_time_left, create_awsclient, \
+    write_session_to_gcdt_awsume_file, read_gcdt_awsume_file, get_last_used_role
 
 log = logging.getLogger(__name__)
 
 
-# code from here: https://github.com/broamski/aws-mfa/blob/master/aws-mfa
+def get_user_session(context):
+    data = read_gcdt_awsume_file(context['gcdt_awsume_file'])
+    account, account_details = get_last_used_role(data['roles'])
+    username = account_details['username']
+
+    profile = account_details['profile']
+    create_awsclient(context, profile)
+
+    # read session token from file
+    user_session = data.get('sessions', {}).get(username, {})
+    session_expiration = user_session.pop('Expiration', None)
+    # output time until expiration
+    #print(get_time_left(session_expiration))
+    if get_time_left(session_expiration) < 3610:
+        log.info("Refreshing session token for {}".format(username))
+        # session valid <60 min
+        # create new session token
+        user_session = get_session_token(context, username)
+        # save session token
+        user_session['Expiration'] = datetime_to_timestamp(user_session['Expiration'])
+        write_session_to_gcdt_awsume_file(context, username, user_session)
+        user_session.pop('Expiration', None)
+
+    return user_session, account, account_details
 
 
-def get_credentials(context, config, profile, assumed_role, username):
-    """Obtain credentials using MFA and write it into credentials file"""
-    session_role_name = profile
+def get_session_token(context, username):
+    """Obtain token using MFA."""
     mfa_device = "arn:aws:iam::976167517828:mfa/{}".format(username)
     try:
         token_input = raw_input
@@ -33,42 +56,42 @@ def get_credentials(context, config, profile, assumed_role, username):
 
     client_sts = context['_awsclient'].get_client('sts')
     try:
-        if assumed_role:
+        response = client_sts.get_session_token(
+            DurationSeconds=36000,
+            SerialNumber=mfa_device,
+            TokenCode=mfa_token
+        )
+        return response['Credentials']
+    except botocore.exceptions.ClientError as exc:
+        log.error(exc)
 
-            response = client_sts.assume_role(
-                RoleArn=assumed_role,
-                RoleSessionName=session_role_name,
-                DurationSeconds=context['duration'],
-                SerialNumber=mfa_device,
-                TokenCode=mfa_token,
-            )
 
-            config.set(
-                profile,
-                'assumed_role',
-                'True',
-            )
-            config.set(
-                profile,
-                'assumed_role_arn',
-                assumed_role
-            )
-        else:
-            response = client_sts.get_session_token(
-                DurationSeconds=context['duration'],
-                SerialNumber=mfa_device,
-                TokenCode=mfa_token
-            )
+# code from here: https://github.com/broamski/aws-mfa/blob/master/aws-mfa
+def get_credentials(context, config, user_session, profile, assumed_role):
+    session_role_name = profile
 
-            config.set(
-                profile,
-                'assumed_role',
-                'False',
-            )
-            config.remove_option(profile, 'assumed_role_arn')
+    client_sts = context['_awsclient'].get_client('sts', **user_session)
+    try:
+        response = client_sts.assume_role(
+            RoleArn=assumed_role,
+            RoleSessionName=session_role_name,
+            DurationSeconds=context['duration'],
+        )
+
+        config.set(
+            profile,
+            'assumed_role',
+            'True',
+        )
+        config.set(
+            profile,
+            'assumed_role_arn',
+            assumed_role
+        )
     except botocore.exceptions.ClientError as exc:
         log.error(exc)
         sys.exit(1)
+        #return 1
 
     # aws_session_token and aws_security_token are both added
     # to support boto and boto3

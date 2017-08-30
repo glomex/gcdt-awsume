@@ -11,7 +11,7 @@ from gcdt.gcdt_logging import logging_config, getLogger
 
 from .utils import read_aws_config
 from . import __version__
-from .awsume import renew, switch, set_account, list_accounts
+from .awsume import renew, switch, set_account, list_accounts, clean_cache_file
 
 log = getLogger(__name__)
 
@@ -25,12 +25,13 @@ MIN_TIME_TO_EXPIRATION = 900  # TODO move to config file
 
 # creating docopt parameters and usage help
 DOC = '''Usage:
-        logon
-        logon renew
-        logon switch <account>
-        logon set <account> <arn> [--profile=<profile>] [--username=<username>]
-        logon list
-        logon version
+        awsume
+        awsume renew
+        awsume switch <account>
+        awsume set <account> <arn> [--profile=<profile>] [--username=<username>]
+        awsume list
+        awsume clean
+        awsume version
 
 -h --help           show this
 '''
@@ -38,7 +39,7 @@ DOC = '''Usage:
 
 @cmd(spec=['version'])
 def version_cmd():
-    log.info('gcdt-logon version %s' % __version__)
+    log.info('gcdt-awsume version %s' % __version__)
 
 
 @cmd(spec=['renew'])
@@ -58,8 +59,13 @@ def switch_cmd(account, **tooldata):
 @cmd(spec=['list'])
 def list_cmd(**tooldata):
     context = tooldata.get('context')
-    #config = tooldata.get('config')
     return list_accounts(context)
+
+
+@cmd(spec=['clean'])
+def clean_cache_cmd(**tooldata):
+    context = tooldata.get('context')
+    return clean_cache_file(context)
 
 
 @cmd(spec=['set', '<account>', '<arn>', '--profile', '--username'])

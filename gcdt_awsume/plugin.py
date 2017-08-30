@@ -8,7 +8,7 @@ from gcdt import gcdt_signals, GcdtError
 from .utils import read_gcdt_awsume_file, get_last_used_role, \
     get_time_left, read_aws_config
 from .awsume_main import GCDT_AWSUME_FILE, MIN_TIME_TO_EXPIRATION, AWS_CREDS_PATH, DURATION
-from .awsume import refresh
+from .awsume import renew
 
 
 log = getLogger(__name__)
@@ -31,7 +31,7 @@ def check_credentials(params):
     expiration = account_details['expiration']
     if expiration < MIN_TIME_TO_EXPIRATION:
         config = read_aws_config(context['aws_creds_path'])
-        refresh(context, config)
+        renew(context, config)
     else:
         log.info('Your credentials will expire in %s seconds.', get_time_left(expiration))
 

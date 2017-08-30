@@ -21,8 +21,9 @@ def decode_format_timestamp(timestamp):
     :param timestamp: unix timestamp in seconds
     :return: datetime in UTC
     """
-    dt = maya.MayaDT(timestamp).datetime(naive=True)
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+    dt = maya.MayaDT(timestamp)
+    timezone = dt.local_timezone
+    return maya.to_utc_offset_aware(dt.datetime(to_timezone=timezone))
 
 
 def datetime_to_timestamp(dt):
@@ -40,8 +41,11 @@ def get_time_left(expiration):
     :param expiration:
     :return: time left in seconds
     """
-    left = expiration - maya.now().epoch
-    return max(left, 0)
+    if isinstance(expiration, int):
+        left = expiration - maya.now().epoch
+        return max(left, 0)
+    else:
+        return 0
 
 
 def create_awsclient(context, profile):
@@ -55,14 +59,15 @@ def write_aws_config(context, config, expiration):
         config.write(configfile)
 
 
-def write_gcdt_awsume_file(context, account, profile, assumed_role,
-                          username, expiration):
+def write_role_to_gcdt_awsume_file(context, account, profile, assumed_role,
+                                   username, expiration):
     """This file we will use for refreshing creds
     """
+    data = read_gcdt_awsume_file(context['gcdt_awsume_file'])
+    if 'roles' not in data:
+        data['roles'] = {}
 
-    roles = read_gcdt_awsume_file(context['gcdt_awsume_file'])
-
-    roles[account] = {
+    data['roles'][account] = {
         'profile': profile,
         'assumed_role': assumed_role,
         'username': username,
@@ -70,7 +75,20 @@ def write_gcdt_awsume_file(context, account, profile, assumed_role,
     }
 
     with open(context['gcdt_awsume_file'], 'w') as answer_file:
-        answer_file.write(json.dumps(roles))
+        answer_file.write(json.dumps(data))
+
+
+def write_session_to_gcdt_awsume_file(context, username, user_session):
+    """This file we will use for refreshing creds
+    """
+    data = read_gcdt_awsume_file(context['gcdt_awsume_file'])
+    if 'sessions' not in data:
+        data['sessions'] = {}
+
+    data['sessions'][username] = user_session
+
+    with open(context['gcdt_awsume_file'], 'w') as answer_file:
+        answer_file.write(json.dumps(data))
 
 
 def read_gcdt_awsume_file(answers_file_path):
