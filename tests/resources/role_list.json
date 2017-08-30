@@ -1,0 +1,18 @@
+{
+  "pnb-dev": [
+    {
+      "acccountId":  "028693506758",
+      "description": "This is DEV account for some project called PNB",
+      "developer":   "arn:aws:iam::028693506758:role/7f-selfassign/pnb-dev-DefDev-X6QTK94PV3TL",
+      "superuser":   "arn:aws:iam::028693506758:role/7f-selfassign-super/pnb-dev-SuperUser-JVE51W2EKZ3B"
+    }
+    ],
+  "pnb-stage": [
+    {
+      "accountId":   "188084614522",
+      "description": "This is STAGE account for some project called PNB",
+      "developer":   "arn:aws:iam::188084614522:role/7f-selfassign/qa-dev-DefDev-1IN2HDH2V1692",
+      "superuser":   "arn:aws:iam::188084614522:role/7f-selfassign-super/qa-dev-SuperUser-13089ZLQVPEXF"
+    }
+  ]
+}
