@@ -16,6 +16,7 @@ from .awsume import renew, switch, set_account, list_accounts, clean_cache_file
 log = getLogger(__name__)
 
 
+# TODO add config via openapi
 AWS_CREDS_PATH = '%s/.aws/credentials' % (os.path.expanduser('~'),)
 GCDT_AWSUME_FILE = '%s/.aws/gcdt_awsume.json' % (os.path.expanduser('~'),)
 #ROLES = ['developer', 'superuser', 'readonly']

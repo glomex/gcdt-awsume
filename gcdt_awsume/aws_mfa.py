@@ -7,6 +7,7 @@ import logging
 
 import botocore.exceptions
 import botocore.session
+from botocore import xform_name
 import configparser
 from backports.configparser import NoOptionError
 
@@ -38,6 +39,7 @@ def get_user_session(context):
         user_session['Expiration'] = datetime_to_timestamp(user_session['Expiration'])
         write_session_to_gcdt_awsume_file(context, username, user_session)
         user_session.pop('Expiration', None)
+        create_awsclient(context, profile)  # new Session
 
     return user_session, account, account_details
 
@@ -68,13 +70,14 @@ def get_session_token(context, username):
 
 # code from here: https://github.com/broamski/aws-mfa/blob/master/aws-mfa
 def get_credentials(context, config, user_session, profile, assumed_role):
-    session_role_name = profile
+    # use xform_name on user_session
+    xform_args = {'aws_' + xform_name(k): v for (k, v) in user_session.items()}
 
-    client_sts = context['_awsclient'].get_client('sts', **user_session)
+    client_sts = context['_awsclient'].get_client('sts', **xform_args)
     try:
         response = client_sts.assume_role(
             RoleArn=assumed_role,
-            RoleSessionName=session_role_name,
+            RoleSessionName=profile,
             DurationSeconds=context['duration'],
         )
 
