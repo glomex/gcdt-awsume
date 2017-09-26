@@ -14,6 +14,9 @@ from gcdt.gcdt_awsclient import AWSClient
 
 log = logging.getLogger(__name__)
 
+# output
+# dt.datetime().strftime('%Y %m %d %H')
+
 
 def decode_format_timestamp(timestamp):
     """Convert unix timestamp (seconds) into datetime.

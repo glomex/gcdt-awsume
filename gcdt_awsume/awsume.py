@@ -36,7 +36,7 @@ def renew(context, config):
     write_role_to_gcdt_awsume_file(context, account, profile, assumed_role, username, role_expiration)
     write_aws_config(context, config, role_expiration)
     log.info(
-        "Success! Your credentials will expire in %s seconds at: %s"
+        "Your credentials will expire in %s seconds at: %s"
         % (context['duration'], decode_format_timestamp(role_expiration)))
 
 
@@ -61,7 +61,7 @@ def set_account(context, config, account, assumed_role, profile, username):
         write_role_to_gcdt_awsume_file(context, account, profile, assumed_role, username, expiration)
         write_aws_config(context, config, expiration)
         log.info(
-            "Success! Your credentials will expire in %s seconds at: %s"
+            "Your credentials will expire in %s seconds at: %s"
             % (context['duration'], decode_format_timestamp(expiration)))
 
 
@@ -105,5 +105,5 @@ def switch(context, config, account=None):
     write_role_to_gcdt_awsume_file(context, account, profile, assumed_role, username, expiration)
     write_aws_config(context, config, expiration)
     log.info(
-        "Success! Your credentials will expire in %s seconds at: %s"
+        "Your credentials will expire in %s seconds at: %s"
         % (context['duration'], decode_format_timestamp(expiration)))

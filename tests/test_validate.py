@@ -1,12 +1,16 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function
 import os
+
 import pytest
 import botocore.session
 import configparser
 from gcdt_testtools.placebo_awsclient import PlaceboAWSClient
-from generate_creds.utils import read_roles_file
-from generate_creds.validate import get_role_arn, validate_credentials
 from gcdt_testtools.helpers_aws import cleanup_buckets, awsclient
 from gcdt_testtools.helpers import temp_folder  # fixture!
+
+from gcdt_awsume.utils import read_gcdt_awsume_file
+from gcdt_awsume.aws_mfa import validate_credentials
 
 ANSWER_FILE = os.path.join(os.path.dirname(__file__), 'testdata/answer.json')
 AWS_CREDS_PATH = os.path.join(os.path.dirname(__file__), 'testdata/credentials')
