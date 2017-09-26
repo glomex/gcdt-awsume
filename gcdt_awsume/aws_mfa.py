@@ -68,18 +68,24 @@ def get_session_token(context, username):
         log.error(exc)
 
 
-# code from here: https://github.com/broamski/aws-mfa/blob/master/aws-mfa
-def get_credentials(context, config, user_session, profile, assumed_role):
+def assume_role(awsclient, duration, user_session, profile, assumed_role):
     # use xform_name on user_session
     xform_args = {'aws_' + xform_name(k): v for (k, v) in user_session.items()}
 
-    client_sts = context['_awsclient'].get_client('sts', **xform_args)
+    client_sts = awsclient.get_client('sts', **xform_args)
+    response = client_sts.assume_role(
+        RoleArn=assumed_role,
+        RoleSessionName=profile,
+        DurationSeconds=duration,
+    )
+    return response['Credentials']
+
+
+# code from here: https://github.com/broamski/aws-mfa/blob/master/aws-mfa
+def get_credentials(context, config, user_session, profile, assumed_role):
     try:
-        response = client_sts.assume_role(
-            RoleArn=assumed_role,
-            RoleSessionName=profile,
-            DurationSeconds=context['duration'],
-        )
+        credentials = assume_role(context['_awsclient'], context['duration'],
+                                  user_session, profile, assumed_role)
 
         config.set(
             profile,
@@ -109,16 +115,16 @@ def get_credentials(context, config, user_session, profile, assumed_role):
         config.set(
             profile,
             option,
-            response['Credentials'][value]
+            credentials[value]
         )
 
     # Save expiration individually, so it can be manipulated
     config.set(
         profile,
         'expiration',
-        response['Credentials']['Expiration'].strftime('%Y-%m-%d %H:%M:%S')
+        credentials['Expiration'].strftime('%Y-%m-%d %H:%M:%S')
     )
-    return datetime_to_timestamp(response['Credentials']['Expiration'])
+    return datetime_to_timestamp(credentials['Expiration'])
 
 
 def validate_credentials(config, profile, assumed_role):

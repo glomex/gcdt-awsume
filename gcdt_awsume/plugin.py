@@ -7,7 +7,8 @@ from botocore.vendored import requests
 from botocore.utils import DEFAULT_METADATA_SERVICE_TIMEOUT, \
     METADATA_SECURITY_CREDENTIALS_URL, RETRYABLE_HTTP_ERRORS
 from gcdt.gcdt_logging import logging_config, getLogger
-from gcdt import gcdt_signals, GcdtError
+from gcdt import gcdt_signals
+from gcdt.gcdt_exceptions import GcdtError
 from gcdt.gcdt_awsclient import AWSClient
 
 from .utils import read_gcdt_awsume_file, get_last_used_role, \
